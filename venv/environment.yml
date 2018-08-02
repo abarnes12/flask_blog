@@ -1,0 +1,15 @@
+name: flaskblog
+dependencies:
+  - python=3.6
+  - flask
+  - pymysql
+  - pip:
+    - Flask-Testing
+    - Flask-SQLAlchemy
+    - Flask-Script
+    - Flask-WTF
+    - Flask-Migrate
+    - Flask-Markdown
+    - Flask-Uploads
+    - py-bcrypt
+    - python-slugify
