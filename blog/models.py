@@ -28,6 +28,8 @@ class Post(db.Model):
     category_id = db.Column(db.Integer, db.ForeignKey('category.id'))
     category = db.relationship('Category', backref=db.backref('posts', lazy='dynamic'))
 
+    comments = db.relationship('Comment', backref='posts', lazy='dynamic')
+
     @property
     def imgsrc(self):
         return uploaded_images.url(self.image)
@@ -59,3 +61,26 @@ class Category(db.Model):
     def __repr__(self):
         #return '<Category %r>' % self.name
         return self.name
+
+class Comment(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    author_id = db.Column(db.Integer, db.ForeignKey('author.id'))
+    username = db.Column(db.String(50))
+    body = db.Column(db.Text)
+    post_id = db.Column(db.Integer, db.ForeignKey('post.id'))
+    publish_date = db.Column(db.DateTime)
+    live = db.Column(db.Boolean)
+
+    def __init__(self, author, post, body, publish_date=None, live=True):
+        self.author_id = author.id
+        self.username = author.username
+        self.post_id = post.id
+        self.body = body
+        if publish_date is None:
+            self.publish_date = datetime.utcnow()
+        else:
+            self.publish_date = publish_date
+        self.live = live
+
+    def __repr__(self):
+        return '<Comment %r>' % self.body

@@ -27,6 +27,42 @@
     on {{ post.publish_date.strftime('%Y-%m-%d') }} in 
     <a href="#">{{ post.category.name }}</a></div>
 
+    <hr />
+
+    <div>
+        {% if post.comments %}
+        <div>
+            <h4>Comments <span class='text-muted'></span></h4>
+        </div>
+        <br>
+            {% for comment in post.comments %}
+                {% if comment.live %}
+                <div>
+                <p>{{ comment.body }}</p>
+                {% if comment.username == session.get('username') %}
+                <a href="{{ url_for('delete_comment', post_id=post.id, comment_id=comment.id) }}">Delete</a>
+                {% endif %}
+                <p>Comment by <strong>{{ comment.username }}</strong> <small>on {{ comment.publish_date.strftime('%Y-%m-%d') }}</small></p>
+                <hr />
+                </div>
+                {% endif %}
+                
+            {% endfor %}
+        {% endif %}
+        
+        {% if session.get('username') %}
+        {% from "_formhelpers.html" import render_field %}
+        <form method = "POST" action = "{{ url_for('article', slug=post.slug) }}" enctype="multipart/form-data" role = "form">
+            
+            {{ form.hidden_tag() }}
+            {{ render_field(form.body, class='form-control', rows=10) }}
+        
+            <button type='submit' class="btn btn-default">Comment</button>
+        </form>
+        
+        {% else %}
+        <div class=text-muted>Please login to leave a comment.</div>
+        {% endif %}
     </div>
 
 </div>

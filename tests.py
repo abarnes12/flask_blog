@@ -56,8 +56,39 @@ class UserTest(unittest.TestCase):
             ),
         follow_redirects=True)
 
+    def create_post(self, title, body, category, new_category):
+        # create a test post
+        return self.app.post('/post', data=dict(
+            title=title,
+            body=body,
+            category=category,
+            new_category=new_category
+            ),
+        follow_redirects=True)
+        
     def logout(self):
         return self.app.get('/logout', follow_redirects=True)
+
+    def register_user(self, fullname, email, username, password, confirm):
+        # register test user
+        return self.app.post('/register', data=dict(
+            fullname=fullname,
+            email=email,
+            username=username,
+            password=password,
+            confirm=confirm
+            ),
+        follow_redirects=True)
+
+    def create_comment(self, slug):
+        return self.app.post('/article/' + slug, data=dict(
+            body='Test comment',
+            ),
+        follow_redirects=True)
+
+    def remove_comment(self, comment_id):
+        # remove test comment
+        return self.app.post('/comment/' + str(comment_id), follow_redirects=True)
 
     def test_create_blog(self):
         rv = self.create_blog()
@@ -71,6 +102,27 @@ class UserTest(unittest.TestCase):
         assert 'User logged out' in str(rv.data)
         rv = self.login('alex', 'wrong')
         assert 'Incorrect username and password' in str(rv.data)
+
+    def test_create_post(self):
+        self.create_blog()
+        self.login('alex', 'test')
+        rv = self.create_post('Test title', 'test body', None, 'test category')
+        assert 'Post created' in str(rv.data)
+
+    def test_register_user(self):
+        # make sure a regular user can be created
+        rv = self.register_user('Test McTester', 'test@example.com', 'test', 'test', 'test')
+        assert 'User account created' in str(rv.data)
+
+    def test_comment(self):
+        self.create_blog()
+        self.login('alex', 'test')
+        self.create_post('Test title', 'test body', None, 'test category')
+        rv = self.create_comment('Test-title')
+        assert 'Comment posted' in str(rv.data)
+
+        rv = self.remove_comment(1)
+        assert 'Comment deleted' in str(rv.data)
 
 if __name__ == '__main__':
     unittest.main()

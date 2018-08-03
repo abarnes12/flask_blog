@@ -1,4 +1,4 @@
-from flask_blog import app
+from flask_blog import app, db
 from flask import render_template, redirect, url_for, session, request, flash
 from author.form import RegisterForm, LoginForm
 from author.models import Author
@@ -37,14 +37,27 @@ def login():
 @app.route('/register', methods=('GET', 'POST'))
 def register():
     form = RegisterForm()
+    error = ""
     if form.validate_on_submit():
-        return redirect(url_for('success'))
-    return render_template('author/register.html', form=form)
-
-@app.route('/success')
-@login_required
-def success():
-    return "Author registered!"
+        salt = bcrypt.gensalt()
+        hashed_password = bcrypt.hashpw(form.password.data, salt)
+        author = Author(
+            form.fullname.data,
+            form.email.data,
+            form.username.data,
+            hashed_password,
+            False
+            )
+        db.session.add(author)
+        db.session.flush()
+        if author.id:
+            db.session.commit()
+            flash("User account created")
+            return redirect(url_for('index'))
+        else:
+            db.session.rollback()
+            error = "Error creating user"
+    return render_template('author/register.html', form=form, error=error)
 
 @app.route('/logout')
 def logout():

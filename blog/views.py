@@ -1,14 +1,15 @@
 from flask_blog import app
 from flask import render_template, redirect, flash, url_for, session, abort, request
-from blog.form import SetupForm, PostForm
+from blog.form import SetupForm, PostForm, CommentForm
 from flask_blog import db, uploaded_images
 from author.models import Author
-from blog.models import Blog, Post, Category
+from blog.models import Blog, Post, Category, Comment
 from author.decorators import login_required, author_required
 import bcrypt
 from slugify import slugify
 
-POSTS_PER_PAGE = 3
+POSTS_PER_PAGE = 5
+COMMENTS_PER_PAGE = 5
 
 @app.route('/')
 @app.route('/index')
@@ -97,13 +98,23 @@ def post():
         post = Post(blog, author, title, body, category, filename, slug)
         db.session.add(post)
         db.session.commit()
+        flash("Post created")
         return redirect(url_for('article', slug=slug))
     return render_template('blog/post.html', form=form, action="new")
 
-@app.route('/article/<slug>')
+@app.route('/article/<slug>', methods=('GET', 'POST'))
 def article(slug):
     post = Post.query.filter_by(slug=slug).first_or_404()
-    return render_template('blog/article.html', post=post)
+    form = CommentForm()
+    if form.validate_on_submit():
+        author = Author.query.filter_by(username=session['username']).first()
+        body = form.body.data
+        comment = Comment(author, post, body)
+        db.session.add(comment)
+        db.session.commit()
+        flash("Comment posted")
+        return redirect(url_for('article', slug=post.slug))
+    return render_template('blog/article.html', post=post, form=form)
 
 @app.route('/edit/<int:post_id>', methods=('GET', 'POST'))
 @author_required
@@ -141,3 +152,13 @@ def delete(post_id):
     db.session.commit()
     flash("Article deleted")
     return redirect('/admin')
+
+@app.route('/comment/<int:comment_id>', methods=('GET', 'POST'))
+@login_required
+def delete_comment(comment_id):
+    post = Post.query.filter_by(id=comment_id).first_or_404()
+    comment = Comment.query.filter_by(id=comment_id).first_or_404()
+    comment.live = False
+    db.session.commit()
+    flash("Comment deleted")
+    return redirect(url_for('article', slug=post.slug))

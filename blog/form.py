@@ -25,3 +25,6 @@ class PostForm(FlaskForm):
     body = TextAreaField('Content', validators=[validators.Required()])
     category = QuerySelectField('Category', query_factory=categories, allow_blank=True)
     new_category = StringField('New Category')
+
+class CommentForm(FlaskForm):
+    body = TextAreaField('Comment', validators=[validators.Required()])
