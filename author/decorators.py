@@ -12,7 +12,7 @@ def login_required(f):
 def author_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        if session.get('is_author') is None:
-           abort(403)
+        if not session.get('is_author'):
+            abort(403)
         return f(*args, **kwargs)
     return decorated_function

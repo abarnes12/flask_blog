@@ -124,5 +124,11 @@ class UserTest(unittest.TestCase):
         rv = self.remove_comment(1)
         assert 'Comment deleted' in str(rv.data)
 
+    def test_admin(self):
+        self.create_blog()
+        self.register_user('Test McTester', 'test@example.com', 'test', 'test', 'test')
+        rv = self.create_post('Test title', 'test body', None, 'test category')
+        assert '403' in str(rv.data)
+
 if __name__ == '__main__':
     unittest.main()
